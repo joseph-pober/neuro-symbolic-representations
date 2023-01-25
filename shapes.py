@@ -11,7 +11,7 @@ edge = 1
 
 # class Shape(Enum):
 
-Shape = Enum("Shape", "CIRCLE TRIANGLE RECTANGLE")
+ShapeEnum = Enum("Shape", "CIRCLE TRIANGLE RECTANGLE")
 # Shape = Enum("Shape", "RECTANGLE TRIANGLE")
 
 c_x = total_img_size // 2
@@ -57,25 +57,25 @@ def draw_circle(draw, x1, y1, x2, y2, color):
     draw.ellipse((x1, y1, x2, y2), fill=color)
 
 
-def get_r_w_h(shape : Shape):
-    if shape == Shape.RECTANGLE:
+def get_r_w_h(shape : ShapeEnum):
+    if shape == ShapeEnum.RECTANGLE:
         width = random.randint(min_r_w, max_r_w)
         height = random.randint(min_r_h, max_r_h)
-    elif shape == Shape.TRIANGLE:
+    elif shape == ShapeEnum.TRIANGLE:
         width = random.randint(min_r_w, max_r_w)
         height = random.randint(min_r_h, max_r_h)
-    elif shape == Shape.CIRCLE:
+    elif shape == ShapeEnum.CIRCLE:
         width = random.randint(min_c_w, max_c_w)
         height = random.randint(min_c_h, max_c_h)
     return width, height
 
 
-def draw_shape(draw, shape: Shape, x1, y1, x2, y2, color, w, h, cx, cy):
-    if shape == Shape.RECTANGLE:
+def draw_shape(draw, shape: ShapeEnum, x1, y1, x2, y2, color, w, h, cx, cy):
+    if shape == ShapeEnum.RECTANGLE:
         draw_rectangle(draw, x1, y1, x2, y2, color)
-    elif shape == Shape.CIRCLE:
+    elif shape == ShapeEnum.CIRCLE:
         draw_circle(draw, x1, y1, x2, y2, color)
-    elif shape == Shape.TRIANGLE:
+    elif shape == ShapeEnum.TRIANGLE:
         draw_triangle(draw, cx, cy, h, color)
 
 
@@ -114,13 +114,13 @@ def get_centre(shape_width, shape_height, position, random_centre, min_edge_dist
     return x, y
 
 
-def get_w_h(shape:Shape, random_size : bool):
+def get_w_h(shape:ShapeEnum, random_size : bool):
     if random_size:
         return get_r_w_h(shape)
     else:
         return shape_size, shape_size
 
-def create_img(directory, name, shape:Shape, position_center, shape_size = shape_size, img_size = total_img_size, color="white"):
+def create_img(directory, name, shape:ShapeEnum, position_center, shape_size = shape_size, img_size = total_img_size, color="white"):
     image = Image.new('1', (img_size, img_size))  # binary
     # image = Image.new('RGB', (size, size)) # rgb
     draw = ImageDraw.Draw(image)
@@ -130,7 +130,7 @@ def create_img(directory, name, shape:Shape, position_center, shape_size = shape
     draw_shape(draw, shape, x1, y1, x2, y2, color, w,h,cx,cy)
     save_img(image, name, directory)
 
-def generate_img(directory, name, shape : Shape, position, random_size=True, random_centre=True, color="white"):
+def generate_img(directory, name, shape : ShapeEnum, position, random_size=True, random_centre=True, color="white"):
     w, h = get_w_h(shape, random_size)
     (x1, y1), (x2, y2) = get_bounding(w, h, position, random_centre)
     
@@ -142,7 +142,7 @@ def generate_img(directory, name, shape : Shape, position, random_size=True, ran
     
 
 
-def generate_img_pair(directory, name, shape: Shape, direction, min_displacement, random_size=False, random_centre=True, color="white"):
+def generate_img_pair(directory, name, shape: ShapeEnum, direction, min_displacement, random_size=False, random_centre=True, color="white"):
     w, h = get_w_h(shape, random_size)
     distance = 0
     # if cx1 == cx2:
@@ -195,7 +195,7 @@ def save_img(image, name, directory, position = None, format="png"):
 
 def create_random_shape():
     # shape = Shape[random.randint(0,len(Shape)-1)]
-    shape = Shape(random.randint(1, 2))
+    shape = ShapeEnum(random.randint(1, 2))
     return create_shape(shape)
 
 
@@ -257,18 +257,18 @@ def create_shape(shape):
     array = np.zeros((total_img_size, total_img_size))
     x = random.randint(min_x, max_x)
     y = random.randint(min_y, max_y)
-    if shape == Shape.RECTANGLE:
+    if shape == ShapeEnum.RECTANGLE:
         array = create_rectangle(array, x, y)
-    elif shape == Shape.TRIANGLE:
+    elif shape == ShapeEnum.TRIANGLE:
         array = create_triangle(array, x, y)
-    elif shape == Shape.CIRCLE:
+    elif shape == ShapeEnum.CIRCLE:
         array = create_circle(array, x, y)
-    elif shape == Shape.WIDE:
+    elif shape == ShapeEnum.WIDE:
         array = create_wide(array, x, y)
-    elif shape == Shape.HIGH:
+    elif shape == ShapeEnum.HIGH:
         array = create_high(array, x, y)
     return array
 
 
 def create(s):
-    return create_shape(Shape(s))
+    return create_shape(ShapeEnum(s))

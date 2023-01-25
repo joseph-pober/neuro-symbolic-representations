@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow import keras
 from tensorflow.keras import layers
 
+import aes
 import exp_propertyAE
 import generator
 import nn
@@ -21,8 +22,8 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 x, y, file_names, n = data.load_simple(DIR.shapes_interpolated_custom_mixed,
-                                       label_function=data.coordinate_label_negative,
-                                       flatten_data=True)
+                                       label_function=data.coordinate_and_shape_label,
+                                       flatten_data=True, shuffle=True)
 
 c_x_up, _, _, _ = data.load_simple(DIR.circle_interpolated_up,
                                        label_function=data.positive_label,
@@ -45,21 +46,54 @@ t_x_down, _, _, _ = data.load_simple(DIR.triangle_interpolated_down,label_functi
 
 
 # ae = Autoencoder()
-vis_up = [c_x_up,s_x_up,t_x_up]
-vis_center = [c_x_center,s_x_center,t_x_center]
-vis_down = [c_x_down,s_x_down,t_x_down]
-vis_data = [vis_up,vis_center,vis_down]
+vis_up =    [c_x_up,s_x_up,t_x_up]
+vis_center =[c_x_center,s_x_center,t_x_center]
+vis_down =  [c_x_down,s_x_down,t_x_down]
+vis_data_pos = [vis_up,vis_center,vis_down]
 
 vis_c = [c_x_up,c_x_center,c_x_down]
 vis_s = [s_x_up,s_x_center,s_x_down]
 vis_t = [t_x_up,t_x_center,t_x_down]
-vis_data = [vis_c,vis_s,vis_t]
-# vis_data=[x_up,x_center,x_down]
+vis_data_shape = [vis_c,vis_s,vis_t]
+
+vis_data=[vis_data_pos,vis_data_shape]
 # exp_propertyAE.run(data=x,epochs=150,encoding_dim=32,vis_self=False,vis_output=True, vis_data=vis_data, loss_graph=True)
+
+vis_data =[
+    [c_x_up,c_x_center,c_x_down],
+    [s_x_up,s_x_center,s_x_down],
+    [t_x_up,t_x_center,t_x_down]
+]
 
 encoding_dims = 6
 
-ae = exp_propertyAE.run(data=x, epochs=100, encoding_dim=encoding_dims,iterations=1, vis_self=True,vis_activations=False, vis_output=False, loss_graph=False, vis_data=vis_data)
+ae = aes.Autoencoder()
+# ae.vis_self()
+# ae.fit(x,epochs=150,graph=True)
+# ae.save()
+ae.load()
+# ae.vis_output(x)
+
+
+# UNSUPERVISED
+z = ae.encode(x)
+pae = exp_propertyAE.PAEa()
+pae.vis_self()
+pae.fit(z, epochs=100, graph=True)
+pae.vis_activations(vis_data, ae)
+
+# SUPERVISED
+# z = ae.encode(x)
+# pae_s = exp_propertyAE.PAEa_supervised()
+# pae_s.vis_self()
+# pae_s.fit(z, y, epochs=100, graph=True)
+# pae_s.vis_activations(vis_data, ae)
+
+# encodings = pae.predict(z)
+# ae.vis_ouput_from_encoding(imgs=x,encodings=encodings,n=10)
+
+
+# ae = exp_propertyAE.run(data=x, epochs=100, encoding_dim=encoding_dims,iterations=1, vis_self=True,vis_activations=False, vis_output=False, loss_graph=False, vis_data=vis_data)
 # encoded = ae.encode(x)
 # position_nn = nn.neural_network(input_size=encoding_dims)
 # position_nn.train(x=encoded,y=y)

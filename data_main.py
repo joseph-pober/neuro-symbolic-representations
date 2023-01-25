@@ -10,7 +10,7 @@ start = 0
 # 	generate_shape_interpolation(directory=d.shapes_interpolated_custom_mixed,position='custom',custom_y=i,shape=shapes.Shape.TRIANGLE) # range from 7 to 20, 7 = -1, 14 = 0, 20 = 1
 
 
-shape = shapes.Shape.RECTANGLE
+shape = shapes.ShapeEnum.RECTANGLE
 generate_shape_interpolation(directory=d.square_interpolated_up,position='u', shape=shape)
 generate_shape_interpolation(directory=d.square_interpolated_down,position='d', shape=shape)
 generate_shape_interpolation(directory=d.square_interpolated_center,position='c', shape=shape)

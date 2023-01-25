@@ -1,12 +1,15 @@
 import os
+from typing import List
 
 from keras.datasets import mnist
 import numpy as np
 # load and show an image with Pillow
 from PIL import Image
+from numpy import ndarray
+
 import generator
 # from generator import shapes
-from shapes import total_img_size
+from shapes import total_img_size, ShapeEnum
 import directories as DIR
 
 import re
@@ -109,15 +112,16 @@ def positive_label(file_names, data_count):
     return np.ones((data_count,1))
 
 def coordinate_label_norm(file_names, data_count, norm_min =0, norm_max=1):
-    targets = np.zeros((data_count,2))
-    i=0
-    for name in file_names:
-        splitByUnderscore = name.split('_')
-        x_number = splitByUnderscore[1][1:]
-        y_number = splitByUnderscore[2].split('.')[0][1:]
-        targets[i][0]=x_number
-        targets[i][1]=y_number
-        i+=1
+    # targets = np.zeros((data_count,2))
+    targets = file_names[:,:2]
+    # i=0
+    # for name in file_names:
+    #     splitByUnderscore = name.split('_')
+    #     x_number = splitByUnderscore[1][1:]
+    #     y_number = splitByUnderscore[2].split('.')[0][1:]
+    #     targets[i][0]=x_number
+    #     targets[i][1]=y_number
+    #     i+=1
     targets_normalized = (norm_max - norm_min) * ((targets - np.min(targets)) / (np.max(targets) - np.min(targets))) + norm_min
     return targets_normalized
 
@@ -127,6 +131,32 @@ def coordinate_label_negative(file_names, data_count):
 def negative_label(args):
     return np.zeros((args, 1))
 
+def coordinate_and_shape_one_hot_label(file_names, data_count):
+    coordinates = coordinate_label_norm(file_names,data_count)
+    shapes_amount = len(ShapeEnum)
+    shapes = np.zeros((data_count,shapes_amount)) # one hot vector for each shape
+    i=0
+    for name in file_names:
+        s = name[2]
+        id = int(s-1)
+        shapes[i,id]=1
+        i+=1
+    labels = np.concatenate((coordinates, shapes), axis=1)
+    return labels
+
+def coordinate_and_shape_label(file_names, data_count):
+    coordinates = coordinate_label_norm(file_names,data_count)
+    shapes_amount = len(ShapeEnum)
+    shapes = np.zeros((data_count,1)) # one hot vector for each shape
+    i=0
+    for name in file_names:
+        s = name[2]
+        id = int(s-1)
+        shapes[i]=(id)/(shapes_amount-1)
+        i+=1
+    labels = np.concatenate((coordinates, shapes), axis=1)
+    return labels
+    
 
 def categorical_label(args):
     s = args.split('_')
@@ -189,13 +219,45 @@ def load_example_pairs(d=DIR.shapes_left_dir, label_function=positive_label):
     return complete  # train, labels
 
 
-def load_simple(directory, label_function=positive_label, img_to_array_function=img_to_array, n=None, flatten_data=True):
+def process_file_names(file_names) -> ndarray:
+    """
+    
+    :param file_names:
+    :return: np array with entries of the form [x,y,shape_enum_number]
+    """
+    processed_names =[]
+    for name in file_names:
+        processed_name = []
+        splitByUnderscore = name.split('_')
+        if len(splitByUnderscore)<=2:
+            processed_name.append(int(splitByUnderscore[-1][:-4]))
+        else:
+            x_number = float(splitByUnderscore[1][1:])
+            y_number = float(splitByUnderscore[2][1:])
+            shape = splitByUnderscore[-1].split('.')[0]
+            shape = ShapeEnum[shape].value
+            processed_name.append(x_number)
+            processed_name.append(y_number)
+            processed_name.append(shape)
+            processed_names.append(processed_name)
+    return np.array(processed_names)
+
+def load_simple(directory, label_function=positive_label, img_to_array_function=img_to_array, n=None, flatten_data=True, shuffle=False):
     data, data_count1, file_names1 = load_imgs_from_directory(directory, n, img_to_array_function)
-    labels = label_function(file_names1,data_count1)
+    
+    p_names = process_file_names(file_names1)
+    labels = label_function(p_names,data_count1)
+    labels_amount = len(labels[0])
     if flatten_data:
         data = flatten(data)
-    # examples1 = np.concatenate((examples1, labels), axis=1)
-    return data, labels, file_names1, data_count1
+    data_point_length = len(data[0])
+    if shuffle:
+        full_data = np.concatenate((data, labels), axis=1)
+        np.random.shuffle(full_data)
+        # data,labels = np.array_split(full_data,data_point_length-labels_amount,axis=1)
+        data = full_data[:,:-labels_amount]
+        labels = full_data[:,-labels_amount:]
+    return data, labels, p_names, data_count1
 
 # def load_simple_with_targets(directory, label_function=positive_label, img_to_array_function=img_to_array, n=None):
 #     examples1, file_names1, data_count1 = load_simple(directory,label_function,img_to_array_function,n)

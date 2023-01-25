@@ -4,6 +4,8 @@ data_dir = "C:/Users/error/PycharmProjects/ml/data/"
 
 histories_dir = dir + "histories/"
 
+model_dir = dir + "models/"
+
 shapes_complex_dir = data_dir + "complex/"
 shapes_simple_dir = data_dir + "simple/"
 shapes_left_dir = data_dir + "left/"
@@ -24,4 +26,3 @@ square_interpolated_center = shapes_interpolated + "square/c/"
 shapes_interpolated_custom= shapes_interpolated + "custom/"
 shapes_interpolated_custom_mixed= shapes_interpolated + "custom_mixed/"
 negative_dir = data_dir + "negative/"
-model_dir = data_dir + "model/"

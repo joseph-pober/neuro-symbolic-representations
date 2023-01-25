@@ -1,11 +1,219 @@
 import keras
 import numpy as np
-from keras import Input, Model
+from keras import Input, Model, regularizers
 from keras.layers import Dense, Concatenate, concatenate
 from keras.optimizers import SGD, Adam
 from matplotlib import pyplot as plt, cm
 import directories as DIR
 from matplotlib.colors import Normalize
+
+from aes import Autoencoder
+
+
+class PAEa(Autoencoder):
+	default_name = "propertyAE_a"
+	
+	def compile(self):
+		opt = Adam(lr=self.lr)
+		self.total_model.compile(optimizer=opt, loss='mean_squared_error')
+	
+	def __init__(self, name=default_name, input_dim=32, property_dim=3, lr=0.01):
+		self.name = name
+		self.input_dim = input_dim
+		# self.encoding_dim = property_dim * 2
+		self.input_shape = (input_dim,)
+		# self.encoding_shape = (self.encoding_dim,)
+		self.lr = lr
+		# self.property_output_dim = self.input_dim//2
+		
+		# ENCODER
+		p1_dims = 1#property_dim
+		p2_dims = 1#property_dim
+		p3_dims = 1#property_dim
+		self.encoder_input = Input(shape=self.input_shape, name="original_code")
+		# properties
+		p_activation = 'sigmoid'
+		code_activation = 'sigmoid'
+		# p1 = Dense(code_dim, activation=p_activation, name="p1_0")(self.encoder_input)
+		p1 = Dense(self.input_dim//2, activation=p_activation, name="p1_1")(self.encoder_input)
+		p1_code = Dense(p1_dims, activation=code_activation, name="p1_code",
+		                # activity_regularizer=regularizers.l1(0.001)
+		                )(p1)
+		p1 = Dense(self.input_dim//2, activation=p_activation, name="p1_2")(p1_code)
+		p1_output = Dense(self.input_dim, activation=p_activation, name="p1_3")(p1)
+		# p1_output = Dense(code_dim, activation=p_activation, name="p1_4")(p1)
+		
+		# p2 = Dense(code_dim, activation=p_activation, name="p2_0")(self.encoder_input)
+		p2 = Dense(self.input_dim//2, activation=p_activation, name="p2_1")(self.encoder_input)
+		p2_code = Dense(p2_dims, activation=p_activation, name="p2_code")(p2)
+		p2 = Dense(self.input_dim//2, activation=p_activation, name="p2_2")(p2_code)
+		p2_output = Dense(self.input_dim, activation=p_activation, name="p2_3")(p2)
+		# p2_output = Dense(code_dim, activation=p_activation, name="p2_4")(p2)
+		
+
+		p3 = Dense(self.input_dim//2, activation=p_activation, name="p3_1")(self.encoder_input)
+		p3_code = Dense(p3_dims, activation=p_activation, name="p3_code")(p3)
+		p3 = Dense(self.input_dim//2, activation=p_activation, name="p3_2")(p3_code)
+		p3_output = Dense(self.input_dim, activation=p_activation, name="p3_3")(p3)
+		
+		ps = [p1_output,p2_output,p3_output]
+		self.encoder_output = concatenate(ps)
+		encoder_m = Model(self.encoder_input,outputs=self.encoder_output, name="Encoder")
+		self.encoder = Model(self.encoder_input,outputs=[p1_code,p2_code,p3_code], name="Encoder")
+		
+		# DECODER
+		self.decoder_input = Input(shape=(input_dim*3,), name="decoder_input")
+		# h = Dense(self.input_dim, activation=p_activation, name="d1_1")(self.decoder_input)
+		# h = Dense(64, activation='sigmoid')(self.decoder_input)
+		# h = Dense(128, activation='sigmoid')(h)
+		self.decoder_output = Dense(self.input_dim,name="output", activation=p_activation)(self.decoder_input)
+		self.decoder = Model(self.decoder_input, self.decoder_output, name="Decoder")
+		
+		# AUTOENCODER
+		self.autoencoder_input = Input(shape=self.input_shape, name="autoencoder_input")  # self.encoder_input#
+		encoded_img = encoder_m(self.autoencoder_input)
+		decoded_img = self.decoder(encoded_img)
+		self.total_model = Model(self.autoencoder_input, decoded_img, name="autoencoder")
+		
+		# COMPILE
+		self.compile()
+		
+	def vis_activations(self, data,ae):
+		fig, axs = plt.subplots(3, 3)
+		# fig.colorbar(mappable=cm.ScalarMappable(norm=Normalize(), cmap='coolwarm'), ax=None)
+		j = 0
+		for d in data:
+			for i in range(len(d)):
+				x = d[i]
+				id = i + (j * 3)
+				z=ae.encode(x)
+				encoded = self.encode(z)
+				# im = axs[j][i].plot(encoded[:, :2], 'r', alpha=0.6)  # , cmap='viridis', norm=None, vmin=0, vmax=1)
+				# im = axs[j][i].plot(encoded[:, 2:], 'b', alpha=0.6)
+				# im = axs[j][i].plot(encoded[0][:,0], 'r', alpha=0.6)
+				# im = axs[j][i].plot(encoded[0][:,1], 'm', alpha=0.6)
+				im = axs[j][i].plot(encoded[0], 'r', alpha=0.6)
+				im = axs[j][i].plot(encoded[1], 'm', alpha=0.6)
+				im = axs[j][i].plot(encoded[2], 'b', alpha=0.6)
+				title = ["Up", "Center", "Down"][i] + ["Circle", "Square", "Triangle"][j]
+				axs[j][i].set_title(title)
+			j = j + 1
+		fig.tight_layout()
+		plt.show()
+	
+
+
+class PAEa_supervised(PAEa):
+	default_name = "propertyAE_a_supervised"
+
+	def compile(self):
+		opt = Adam(lr=self.lr)
+		self.total_model.compile(optimizer=opt, loss='mean_squared_error')
+	
+	def __init__(self, name=default_name, input_dim=32, property_dim=3, lr=0.01):
+		self.name = name
+		self.input_dim = input_dim
+		self.encoding_dim = property_dim * 2
+		self.input_shape = (input_dim,)
+		self.encoding_shape = (self.encoding_dim,)
+		self.lr = lr
+		self.property_output_dim = self.input_dim//2
+		
+		# ENCODER
+		p1_dims = 2#property_dim
+		p2_dims = 1#property_dim
+		self.encoder_input = Input(shape=self.input_shape, name="original_code")
+		# properties
+		p_activation = 'relu'
+		p1 = Dense(self.input_dim, activation=p_activation, name="p1_0")(self.encoder_input)
+		p1 = Dense(self.input_dim//2, activation=p_activation, name="p1_1")(p1)
+		p1_output = Dense(p1_dims, activation='sigmoid', name="p1_code",
+		                # activity_regularizer=regularizers.l1(0.001)
+		                )(p1)
+		# p1_output = Dense(self.property_output_dim, activation=p_activation, name="p1_3")(p1_code)
+		# p1_output = Dense(code_dim, activation=p_activation, name="p1_4")(p1)
+		
+		p2 = Dense(self.input_dim, activation=p_activation, name="p2_0")(self.encoder_input)
+		p2 = Dense(self.input_dim//2, activation=p_activation, name="p2_1")(p2)
+		p2_output = Dense(p2_dims, activation='sigmoid', name="p2_code")(p2)
+		# p2_output = Dense(self.property_output_dim, activation=p_activation, name="p2_3")(p2_code)
+		# p2_output = Dense(code_dim, activation=p_activation, name="p2_4")(p2)
+		
+		ps = [p1_output, p2_output]
+		self.encoder_output = concatenate(ps)
+		self.total_model = Model(self.encoder_input,outputs=self.encoder_output, name="Model")
+		
+		# COMPILE
+		self.compile()
+		
+	def fit(self, x_train, y, validation_split=0.1, epochs=100,graph=False):
+		history = self.total_model.fit(x_train, y,
+		                               epochs=epochs,
+		                               batch_size=64,
+		                               shuffle=True,
+		                               validation_split=validation_split,
+		                               verbose=2
+		                               )
+		if not graph:
+			return history
+		# summarize history for loss
+		plt.plot(history.history['loss'])
+		plt.plot(history.history['val_loss'])
+		plt.title('model loss')
+		plt.ylabel('loss')
+		plt.xlabel('epoch')
+		plt.legend(['train', 'test'], loc='upper right')
+		plt.show()
+		
+		return history
+	
+	def encode(self, data):
+		encodings = self.total_model.predict(data)
+		return encodings
+
+
+class PAEa_supervised_from_img(PAEa_supervised):
+	default_name = "propertyAE_a_supervised_from_img"
+	
+	def compile(self):
+		opt = Adam(lr=self.lr)
+		self.total_model.compile(optimizer=opt, loss='mean_absolute_error')
+	
+	def __init__(self, name=default_name, input_dim=784, property_dim=3, lr=0.01):
+		self.name = name
+		self.input_dim = input_dim
+		self.encoding_dim = property_dim * 2
+		self.input_shape = (input_dim,)
+		self.encoding_shape = (self.encoding_dim,)
+		self.lr = lr
+		self.property_output_dim = self.input_dim // 2
+		
+		# ENCODER
+		p1_dims = 2  # property_dim
+		p2_dims = 1  # property_dim
+		self.encoder_input = Input(shape=self.input_shape, name="original_code")
+		# properties
+		p_activation = 'relu'
+		p1 = Dense(self.input_dim, activation=p_activation, name="p1_0")(self.encoder_input)
+		p1 = Dense(self.input_dim // 2, activation=p_activation, name="p1_1")(p1)
+		p1_output = Dense(p1_dims, activation='sigmoid', name="p1_code",
+		                  # activity_regularizer=regularizers.l1(0.001)
+		                  )(p1)
+		# p1_output = Dense(self.property_output_dim, activation=p_activation, name="p1_3")(p1_code)
+		# p1_output = Dense(code_dim, activation=p_activation, name="p1_4")(p1)
+		
+		p2 = Dense(self.input_dim, activation=p_activation, name="p2_0")(self.encoder_input)
+		p2 = Dense(self.input_dim // 2, activation=p_activation, name="p2_1")(p2)
+		p2_output = Dense(p2_dims, activation='sigmoid', name="p2_code")(p2)
+		# p2_output = Dense(self.property_output_dim, activation=p_activation, name="p2_3")(p2_code)
+		# p2_output = Dense(code_dim, activation=p_activation, name="p2_4")(p2)
+		
+		ps = [p1_output, p2_output]
+		self.encoder_output = concatenate(ps)
+		self.total_model = Model(self.encoder_input, outputs=self.encoder_output, name="Model")
+		
+		# COMPILE
+		self.compile()
 
 
 class PropertyAE:

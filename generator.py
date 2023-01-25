@@ -1,7 +1,7 @@
 import random
 
 import shapes
-from shapes import Shape, generate_img, generate_img_pair
+from shapes import ShapeEnum, generate_img, generate_img_pair
 import numpy as np
 
 # colors = ["red", "blue"]
@@ -28,7 +28,7 @@ def generate_shape(directory, n, min_displacement=1, directions=default_directio
         shape = random.choice(shapes)
         generate_img(directory=directory, name=str(i), position=position, shape=shape, random_size=random_size, random_centre=random_centre)
         
-def generate_shape_interpolation(directory, shape : Shape = Shape.CIRCLE, min_displacement:int=1, position='u', custom_y = None):
+def generate_shape_interpolation(directory, shape : ShapeEnum = ShapeEnum.CIRCLE, min_displacement:int=1, position='u', custom_y = None):
     starting_y = 0
     starting_x = shapes.shape_size
     if position == 'u':
