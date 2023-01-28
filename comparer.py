@@ -188,12 +188,7 @@ class Comparer(DefaultComparer):
         return rs
 
     def compile(self):
-        self.model.compile(optimizer='adam', loss='binary_crossentropy')
-        # self.model.compile(
-        #     optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
-        #     loss=keras.losses.BinaryCrossentropy()
-        # )
-        # self.model.compile(optimizer='adadelta', loss='binary_crossentropy') #TODO use KERAS complier so it can be saved
+        self.model.compile(optimizer='adam', loss='binary_crossentropy') #MAYBE use KERAS complier so it can be saved
 
     def get_w(self, m):
         s, i, j = 6, 0, 0

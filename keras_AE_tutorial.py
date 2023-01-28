@@ -145,12 +145,8 @@ class CAE(Autoencoder):
                 spec = np.zeros(f)
                 for k in range(f):
                     #					print((i,j,k))
-                    # TODO enable again
                     pass
                 #					spec[k] = s[i,j,k]
-                # TODO good idea?
-                #				m = np.linalg.norm(spec)
-                #				if m > 1/f:
                 symv = state[0, i, j, 0]
                 pos = np.array([j, i])
                 so = Object(spec, symv, pos)
