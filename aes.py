@@ -212,3 +212,69 @@ class Autoencoder:
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
         plt.show()
+
+class AutoencoderSmall(Autoencoder):
+    default_name = "autoencoder_small"
+    
+    def __init__(self, name=default_name, input_dim=32, encoding_dim=3, lr=0.01):
+        self.name = name
+        self.input_dim = input_dim
+        self.encoding_dim = encoding_dim
+        self.input_shape = (input_dim,)
+        self.encoding_shape = (self.encoding_dim,)
+        self.lr = lr
+        
+        self.encoder_activation = "sigmoid"
+        self.code_activation = "sigmoid"
+        self.decoder_activation = "sigmoid"
+        self.decoder_output_activation = "sigmoid"
+    
+        # ENCODER
+        self.encoder_input = Input(shape=self.input_shape, name="original_img")
+        h = Dense(32, activation=self.encoder_activation)(self.encoder_input)
+        h = Dense(16, activation=self.encoder_activation)(h)
+        h = Dense(8, activation=self.encoder_activation)(h)
+        self.encoder_output = Dense(encoding_dim, activation=self.code_activation,name="code",
+                                    # activity_regularizer=regularizers.l1(0.0001)
+                                    )(h)
+        self.encoder = Model(self.encoder_input, self.encoder_output,name="Encoder")
+    
+        # DECODER
+        self.decoder_input = Input(shape=self.encoding_shape, name="decoder_input")
+        h = Dense(8, activation=self.decoder_activation)(self.decoder_input)
+        h = Dense(16, activation=self.decoder_activation)(h)
+        h = Dense(32, activation=self.decoder_activation)(h)
+        self.decoder_output = Dense(self.input_dim, activation=self.decoder_output_activation)(h)
+        self.decoder = Model(self.decoder_input, self.decoder_output, name="Decoder")
+    
+        # AUTOENCODER
+        self.autoencoder_input = Input(shape=self.input_shape, name="autoencoder_input")  # self.encoder_input#
+        encoded_img = self.encoder(self.autoencoder_input)
+        decoded_img = self.decoder(encoded_img)
+        self.total_model = Model(self.autoencoder_input, decoded_img, name="autoencoder")
+        
+        #COMPILE
+        self.compile()
+
+    def vis_activations(self, data, ae):
+        fig, axs = plt.subplots(3, 3)
+        # fig.colorbar(mappable=cm.ScalarMappable(norm=Normalize(), cmap='coolwarm'), ax=None)
+        j = 0
+        for d in data:
+            for i in range(len(d)):
+                x = d[i]
+                id = i + (j * 3)
+                z = ae.encode(x)
+                encoded = self.encode(z)
+                # im = axs[j][i].plot(encoded[:, :2], 'r', alpha=0.6)  # , cmap='viridis', norm=None, vmin=0, vmax=1)
+                # im = axs[j][i].plot(encoded[:, 2:], 'b', alpha=0.6)
+                # im = axs[j][i].plot(encoded[0][:,0], 'r', alpha=0.6)
+                # im = axs[j][i].plot(encoded[0][:,1], 'm', alpha=0.6)
+                im = axs[j][i].plot(encoded[:,0], 'r', alpha=0.6)
+                im = axs[j][i].plot(encoded[:,1], 'm', alpha=0.6)
+                im = axs[j][i].plot(encoded[:,2], 'b', alpha=0.6)
+                title = ["Up", "Center", "Down"][i] + ["Circle", "Square", "Triangle"][j]
+                axs[j][i].set_title(title)
+            j = j + 1
+        fig.tight_layout()
+        plt.show()

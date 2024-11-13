@@ -56,7 +56,7 @@ vis_s = [s_x_up,s_x_center,s_x_down]
 vis_t = [t_x_up,t_x_center,t_x_down]
 vis_data_shape = [vis_c,vis_s,vis_t]
 
-vis_data=[vis_data_pos,vis_data_shape]
+# vis_data=[vis_data_pos,vis_data_shape]
 # exp_propertyAE.run(data=x,epochs=150,encoding_dim=32,vis_self=False,vis_output=True, vis_data=vis_data, loss_graph=True)
 
 vis_data =[
@@ -65,7 +65,7 @@ vis_data =[
     [t_x_up,t_x_center,t_x_down]
 ]
 
-encoding_dims = 6
+# encoding_dims = 6
 
 ae = aes.Autoencoder()
 # ae.vis_self()
@@ -74,13 +74,19 @@ ae = aes.Autoencoder()
 ae.load()
 # ae.vis_output(x)
 
+# Create feature vectors
+z = ae.encode(x)
+
+aes = aes.AutoencoderSmall()
+aes.vis_self()
+aes.fit(z,epochs=150,graph=True)
+aes.vis_activations(vis_data, ae)
 
 # UNSUPERVISED
-z = ae.encode(x)
-pae = exp_propertyAE.PAEa()
-pae.vis_self()
-pae.fit(z, epochs=100, graph=True)
-pae.vis_activations(vis_data, ae)
+# pae = exp_propertyAE.PAEa()
+# pae.vis_self()
+# pae.fit(z, epochs=100, graph=True)
+# pae.vis_activations(vis_data, ae)
 
 # SUPERVISED
 # z = ae.encode(x)
