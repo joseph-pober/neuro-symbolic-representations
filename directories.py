@@ -1,6 +1,7 @@
 dir = "C:/Users/error/PycharmProjects/ml/"
+dir = "A:/PhD/ml/"
 
-data_dir = "C:/Users/error/PycharmProjects/ml/data/"
+data_dir = "A:/PhD/ml/data/"#"C:/Users/error/PycharmProjects/ml/data/"
 
 histories_dir = dir + "histories/"
 
@@ -20,9 +21,12 @@ circle_interpolated_center = shapes_interpolated + "circle/c/"
 triangle_interpolated_up = shapes_interpolated + "triangle/u/"
 triangle_interpolated_down = shapes_interpolated + "triangle/d/"
 triangle_interpolated_center = shapes_interpolated + "triangle/c/"
+triangle_interpolated_test = shapes_interpolated + "triangle/test/"
 square_interpolated_up = shapes_interpolated + "square/u/"
 square_interpolated_down = shapes_interpolated + "square/d/"
 square_interpolated_center = shapes_interpolated + "square/c/"
 shapes_interpolated_custom= shapes_interpolated + "custom/"
 shapes_interpolated_custom_mixed= shapes_interpolated + "custom_mixed/"
+square_and_circle_interpolated_custom_mixed= shapes_interpolated + "custom_square_and_circle/"
+shapes_interpolated_custom_mixed_old= shapes_interpolated + "custom_mixed_OLD/"
 negative_dir = data_dir + "negative/"

@@ -7,6 +7,7 @@ from keras import backend as K
 from keras import regularizers
 import matplotlib.pyplot as plt
 from keras.optimizers import Adam
+import tensorflow as tf
 
 import directories
 
@@ -20,19 +21,25 @@ class Autoencoder:
     encoder_name = "encoder"
     
     def save(self):
-        self.total_model.save(directories.model_dir + self.name + "-" + self.model_name)
-        self.decoder.save(directories.model_dir + self.name + "-" + self.decoder_name)
-        self.encoder.save(directories.model_dir + self.name + "-" + self.encoder_name)
+        self.total_model.save(directories.model_dir + self.name + "/" + self.model_name)
+        self.decoder_model.save(directories.model_dir + self.name + "/" + self.decoder_name)
+        self.encoder_model.save(directories.model_dir + self.name + "/" + self.encoder_name)
+        tf.keras.utils.plot_model(self.total_model, f"{directories.model_dir}{self.name}/total_model.png", show_shapes=True, show_layer_names=True,expand_nested=True)
+        tf.keras.utils.plot_model(self.decoder_model, f"{directories.model_dir}{self.name}/decoder_model.png", show_shapes=True, show_layer_names=True,expand_nested=True)
+        tf.keras.utils.plot_model(self.encoder_model, f"{directories.model_dir}{self.name}/encoder_model.png", show_shapes=True, show_layer_names=True,expand_nested=True)
 
-    def load(self, name=default_name):
-        self.total_model = keras.models.load_model(directories.model_dir + name + "-" + self.model_name)
-        self.decoder = keras.models.load_model(directories.model_dir + name + "-" + self.decoder_name)
-        self.encoder = keras.models.load_model(directories.model_dir + name + "-" + self.encoder_name)
+    def load(self, name=None):
+        if not name:
+            name = self.name
+            
+        self.total_model = keras.models.load_model(directories.model_dir + name + "/" + self.model_name)
+        self.decoder_model = keras.models.load_model(directories.model_dir + name + "/" + self.decoder_name)
+        self.encoder_model = keras.models.load_model(directories.model_dir + name + "/" + self.encoder_name)
         self.compile()
 
     def compile(self):
         # COMPILE
-        opt = Adam(lr=self.lr)
+        opt = Adam(learning_rate=self.lr)
         self.total_model.compile(optimizer=opt, loss='binary_crossentropy')
     
     # def run(self):
@@ -58,21 +65,21 @@ class Autoencoder:
         self.encoder_output = Dense(encoding_dim, activation=self.code_activation,name="code",
                                     # activity_regularizer=regularizers.l1(0.0001)
                                     )(h)
-        self.encoder = Model(self.encoder_input, self.encoder_output,name="Encoder")
+        self.encoder_model = Model(self.encoder_input, self.encoder_output, name="Encoder")
     
         # DECODER
         self.decoder_input = Input(shape=self.encoding_shape, name="decoder_input")
         h = Dense(64, activation=self.decoder_activation)(self.decoder_input)
         h = Dense(128, activation=self.decoder_activation)(h)
         # h = Dense(256, activation='sigmoid')(h)
-        self.decoder_output = Dense(self.input_dim, activation=self.decoder_output_activation)(h)
-        self.decoder = Model(self.decoder_input, self.decoder_output, name="Decoder")
+        self.concat_output = Dense(self.input_dim, activation=self.decoder_output_activation)(h)
+        self.decoder_model = Model(self.decoder_input, self.concat_output, name="Decoder")
     
         # AUTOENCODER
         self.autoencoder_input = Input(shape=self.input_shape, name="autoencoder_input")  # self.encoder_input#
-        encoded_img = self.encoder(self.autoencoder_input)
-        decoded_img = self.decoder(encoded_img)
-        self.total_model = Model(self.autoencoder_input, decoded_img, name="autoencoder")
+        encoded_img = self.encoder_model(self.autoencoder_input)
+        decoded_img = self.decoder_model(encoded_img)
+        self.total_model = Model(self.autoencoder_input, decoded_img, name=self.name)
         
         #COMPILE
         self.compile()
@@ -103,18 +110,21 @@ class Autoencoder:
         return predictions
 
     def encode(self, data):
-        encodings = self.encoder.predict(data)
+        encodings = self.encoder_model.predict(data)
         return encodings
     
-    def decode(self, data):
-        decodings = self.decoder.predict(data)
+    def decode(self, data, batchsize=None):
+        decodings = self.decoder_model.predict(data,batch_size=batchsize)
+        # decodings = self.decoder_model(data)
         return decodings
 
     def vis_self(self):
         # VIS
         self.total_model.summary()
-        keras.utils.plot_model(self.total_model, f"{directories.model_dir}{self.name}.png", show_shapes=True, show_layer_names=True,
-                               expand_nested=True)
+        # tf.keras.utils.plot_model
+        tf.keras.utils.plot_model(self.total_model, f"{directories.model_dir}{self.name}\image.png", show_shapes=True, show_layer_names=True,expand_nested=True)
+        # tf.keras.utils.plot_model(self.total_model, f"{directories.model_dir}{self.name}.png", show_shapes=True, show_layer_names=True,
+        #                        expand_nested=True)
         keras.utils.model_to_dot(self.total_model)
 
     def vis_activations(self, data):
@@ -142,6 +152,13 @@ class Autoencoder:
         plt.show()
         
     def vis_ouput_from_encoding(self, imgs, encodings, n=10):
+        """
+        Generates images from encodings (of a property network)
+        :param imgs:
+        :param encodings:
+        :param n:
+        :return:
+        """
         decoded_imgs = self.decode(encodings)
         plt.figure(figsize=(20, 4))
         for i in range(n):
@@ -166,7 +183,7 @@ class Autoencoder:
 
     def vis_output(self, data, n=10):  # How many digits we will display
         encoded_imgs = self.encode(data)
-        decoded_imgs = self.decoder.predict(encoded_imgs)
+        decoded_imgs = self.decoder_model.predict(encoded_imgs)
         plt.figure(figsize=(20, 4))
         for i in range(n):
             # Display original
@@ -190,7 +207,7 @@ class Autoencoder:
 
     def vis_output_old(self, data, n=10):  # How many digits we will display
         encoded_imgs = self.encode(data)
-        decoded_imgs = self.decoder.predict(encoded_imgs)
+        decoded_imgs = self.decoder_model.predict(encoded_imgs)
 
         plt.figure(figsize=(20, 4))
         for i in range(n):
@@ -212,6 +229,20 @@ class Autoencoder:
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
         plt.show()
+        
+    def img_from_encoding(self, encodings):
+        decodings = self.decode(encodings)
+        n = decodings.shape[0]
+        for i in range(n):
+            # Display images
+            # ax = plt.subplot(nrows=1, ncols=n, index=i + 1)
+            ax = plt.subplot(1, n, i + 1)
+            plt.imshow(decodings[i].reshape(28, 28))
+            plt.gray()
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+        plt.show()
+        
 
 class AutoencoderSmall(Autoencoder):
     default_name = "autoencoder_small"

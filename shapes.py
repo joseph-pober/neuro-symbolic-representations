@@ -147,28 +147,28 @@ def generate_img_pair(directory, name, shape: ShapeEnum, direction, min_displace
     distance = 0
     # if cx1 == cx2:
     #     raise ValueError
-    if direction is 'l':
+    if direction == 'l':
         cx1, cy1 = get_centre(w, h, min_edge_distance_l=min_displacement, position=None, random_centre=random_centre)
         (x11, y11), (x12, y12) = get_bounding_box(w, h, cx1, cy1)
         cy2 = cy1
         cx2 = random.randint(w + edge, cx1 - 1)
         (x21, y21), (x22, y22) = get_bounding_box(w, h, cx2, cy2)
         distance=cx1-cx2
-    if direction is 'r':
+    if direction == 'r':
         cx1, cy1 = get_centre(w, h, min_edge_distance_r=min_displacement, position=None, random_centre=random_centre)
         (x11, y11), (x12, y12) = get_bounding_box(w, h, cx1, cy1)
         cy2 = cy1
         cx2 = random.randint(cx1 + 1, max_cx)
         (x21, y21), (x22, y22) = get_bounding_box(w, h, cx2, cy2)
         distance=cx2-cx1
-    if direction is 'u':
+    if direction == 'u':
         cx1, cy1 = get_centre(w, h, min_edge_distance_u=min_displacement, position=None, random_centre=random_centre)
         (x11, y11), (x12, y12) = get_bounding_box(w, h, cx1, cy1)
         cx2 = cx1
         cy2 = random.randint(w + edge, cy1 - 1)
         (x21, y21), (x22, y22) = get_bounding_box(w, h, cx2, cy2)
         distance=cy1-cy2
-    if direction is 'd':
+    if direction == 'd':
         cx1, cy1 = get_centre(w, h, min_edge_distance_d=min_displacement, position=None, random_centre=random_centre)
         (x11, y11), (x12, y12) = get_bounding_box(w, h, cx1, cy1)
         cx2 = cx1
