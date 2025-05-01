@@ -1,5 +1,6 @@
 from enum import Enum
 
+from keras import regularizers
 from matplotlib import pyplot as plt
 import keras
 import numpy as np
@@ -35,23 +36,24 @@ x, y, file_names, n = data.load_simple(DIR.shapes_interpolated_custom_mixed_old,
                                        label_function=data.coordinate_and_shape_label,
                                        flatten_data=True, shuffle=True)
 
+
 c_x_up, _, _, _ = data.load_simple(DIR.circle_interpolated_up,
                                        label_function=data.positive_label,
-                                       flatten_data=True)
+                                       flatten_data=True, shuffle=True)
 c_x_center, _, _, _ = data.load_simple(DIR.circle_interpolated_center,
                                        label_function=data.positive_label,
-                                       flatten_data=True)
+                                       flatten_data=True, shuffle=True)
 c_x_down, _, _, _ = data.load_simple(DIR.circle_interpolated_down,
                                        label_function=data.positive_label,
-                                       flatten_data=True)
+                                       flatten_data=True, shuffle=True)
 
-s_x_up, _, _, _ = data.load_simple(DIR.square_interpolated_up,label_function=data.positive_label,flatten_data=True)
-s_x_center, _, _, _ = data.load_simple(DIR.square_interpolated_center, label_function=data.positive_label,flatten_data=True)
-s_x_down, _, _, _ = data.load_simple(DIR.square_interpolated_down,label_function=data.positive_label,flatten_data=True)
+s_x_up, _, _, _ = data.load_simple(DIR.square_interpolated_up,label_function=data.positive_label,flatten_data=True, shuffle=True)
+s_x_center, _, _, _ = data.load_simple(DIR.square_interpolated_center, label_function=data.positive_label,flatten_data=True, shuffle=True)
+s_x_down, _, _, _ = data.load_simple(DIR.square_interpolated_down,label_function=data.positive_label,flatten_data=True, shuffle=True)
 
-t_x_up, _, _, _ = data.load_simple(DIR.triangle_interpolated_up,label_function=data.positive_label,flatten_data=True)
-t_x_center, _, _, _ = data.load_simple(DIR.triangle_interpolated_center, label_function=data.positive_label,flatten_data=True)
-t_x_down, _, _, _ = data.load_simple(DIR.triangle_interpolated_down,label_function=data.positive_label,flatten_data=True)
+t_x_up, _, _, _ = data.load_simple(DIR.triangle_interpolated_up,label_function=data.positive_label,flatten_data=True, shuffle=True)
+t_x_center, _, _, _ = data.load_simple(DIR.triangle_interpolated_center, label_function=data.positive_label,flatten_data=True, shuffle=True)
+t_x_down, _, _, _ = data.load_simple(DIR.triangle_interpolated_down,label_function=data.positive_label,flatten_data=True, shuffle=True)
 
 vis_up =    [c_x_up,s_x_up,t_x_up]
 vis_center =[c_x_center,s_x_center,t_x_center]
@@ -73,47 +75,59 @@ vis_data =[
 # DATA FOR EXPERIMENT (C)
 exp_c_data = np.concatenate([s_x_up,t_x_up,c_x_center,s_x_center,t_x_center,c_x_down,s_x_down,t_x_down])
 
+# DATA FOR EXPERIMENT 2SHAPES (square and triangle)
+exp_2shapes_data, _, _, _  = data.load_simple(DIR.square_and_triangle_interpolated, label_function=data.coordinate_and_shape_label,
+                                       flatten_data=True, shuffle=True)
+
 # PREPROCESSING via regular AUTOENCODER
-ae_name = "AE.shapes3a"
+ae_name = "AE.3shapes-reg"
 ae_epochs = 150
 ae_encoding_dim = 32
 ae_input_dim=784
+ae_lr = 0.01
+ae_reg_term=10e-5
+ae_reg_mode=regularizers.l1
 ae_full_name = f"{ae_name}_{ae_input_dim}-{ae_encoding_dim}-{ae_epochs}"
-ae = aes.Autoencoder(name=ae_full_name,  input_dim=ae_input_dim, encoding_dim=ae_encoding_dim, lr=0.01)
+ae = aes.AutoencoderRegularised(name=ae_full_name,  input_dim=ae_input_dim, encoding_dim=ae_encoding_dim, lr=ae_lr,
+                                reg_mode=ae_reg_mode,reg_term=ae_reg_term)
 
 # RUN
-ae_run_mode : RunMode = RunMode.TRAIN
-# ae_run_mode : RunMode = RunMode.LOAD
+ae_data = x#exp_2shapes_data #
+# ae_run_mode : RunMode = RunMode.TRAIN
+ae_run_mode : RunMode = RunMode.LOAD
 # train
 if ae_run_mode == RunMode.TRAIN:
-    ae.fit(x,epochs=ae_epochs,graph=True)
+    ae.fit(ae_data,epochs=ae_epochs,graph=True)
     ae.save()
+    # VIS
+    ae.vis_output(ae_data)
+    ae.vis_self()
 # load
 elif ae_run_mode == RunMode.LOAD:
     ae.load()
     
-# VIS
-ae.vis_output(x)
-ae.vis_self()
 
 # Create feature vectors
-encode_data = x #exp_c_data # usually x (the full data)
+encode_data = ae_data #exp_c_data # usually x (the full data)
 z = ae.encode(encode_data)
 
 # PROPERTY NETWORK
 input_dim=32
 property_dim=3
 epochs=150
+pae_lr = 0.01
+pae_reg_term = 10e-5
 # version="p" #"b"#"c"
 # version = "differentP"
-version="shapes3a"
+version="3shapesB"
 pae_name = f"PAE.{version}_{input_dim}-{property_dim}-{epochs}"
-# pae : exp_propertyAE.PAEa = exp_propertyAE.PAEa(name=pae_name,input_dim=input_dim, property_dim=property_dim, lr=0.01)
-pae : exp_propertyAE.PAEb = exp_propertyAE.PAEb(name=pae_name,input_dim=input_dim, property_dim=property_dim, lr=0.01)
+pae : exp_propertyAE.PAEa = exp_propertyAE.PAEa(name=pae_name,input_dim=input_dim, property_dim=property_dim, lr=0.01)
+# pae : exp_propertyAE.PAEb = exp_propertyAE.PAEregularised(name=pae_name,input_dim=input_dim, property_dim=property_dim,
+#                                                           lr=pae_lr, reg_term = pae_reg_term)
 
 # RUN
-mode : RunMode = RunMode.TRAIN
-# mode : RunMode = RunMode.LOAD
+# mode : RunMode = RunMode.TRAIN
+mode : RunMode = RunMode.LOAD
 # train
 if mode == RunMode.TRAIN:
     pae.fit(x_train=z,validation_split=0.1,epochs=epochs,graph=True)
@@ -140,18 +154,30 @@ class ExperimentType(Enum):
     DIFFERENT_PROPETIES=3
     VIS_META = 4
     VIS_OUTPUTS = 5
+    MANUAL_ENCODINGS = 6
 # experiment_mode : ExperimentType = ExperimentType.NOTHING
 # experiment_mode : ExperimentType = ExperimentType.TEST
-# experiment_mode : ExperimentType = ExperimentType.PROPERTIES2
-experiment_mode : ExperimentType = ExperimentType.DIFFERENT_PROPETIES
+experiment_mode : ExperimentType = ExperimentType.PROPERTIES2
+# experiment_mode : ExperimentType = ExperimentType.DIFFERENT_PROPETIES
 # experiment_mode : ExperimentType = ExperimentType.VIS_META
 # experiment_mode : ExperimentType = ExperimentType.VIS_OUTPUTS
+# experiment_mode : ExperimentType = ExperimentType.MANUAL_ENCODINGS
 
 match experiment_mode:
+    case ExperimentType.MANUAL_ENCODINGS:
+        exp_encodings = [
+            [
+                np.array([0.43]), np.array([0.71]), np.array([0.43])
+            ],
+            [np.array([0.43]),np.array([0.43]),np.array([0.57])],
+        ]
+        
+        pae.vis_encodings(encodings=exp_encodings, autoencoder=ae)
+        
     case ExperimentType.TEST:
         # encodings = pae.encode(z)
         # pae.img_from_encoding(autoencoder=ae,encodings=encodings,n=10)
-        pae.img(images=x, ae_z=z, ae=ae, n=10)
+        pae.img(images=ae_data, ae_z=z, ae=ae, n=10)
     case ExperimentType.PROPERTIES:
         for k in npa:
             exp_encodings = []

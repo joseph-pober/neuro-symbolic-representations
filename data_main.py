@@ -7,10 +7,13 @@ import directories as d
 # start = 0
 
 # make circles and squares, without triangles
-sc=[shapes.ShapeEnum.CIRCLE, shapes.ShapeEnum.RECTANGLE]
-for s in sc:
+# sc=[shapes.ShapeEnum.CIRCLE, shapes.ShapeEnum.RECTANGLE]
+
+# make squares and triangles
+st=[shapes.ShapeEnum.TRIANGLE, shapes.ShapeEnum.RECTANGLE]
+for s in st:
 	for i in range(shapes.shape_size, shapes.total_img_size-shapes.shape_size):
-		generate_shape_interpolation(directory=d.square_and_circle_interpolated_custom_mixed,position='custom',custom_y=i,shape=s) # range from 7 to 20, 7 = -1, 14 = 0, 20 = 1
+		generate_shape_interpolation(directory=d.square_and_triangle_interpolated,position='custom',custom_y=i,shape=s) # range from 7 to 20, 7 = -1, 14 = 0, 20 = 1
 
 
 # for i in range(shapes.shape_size, shapes.total_img_size-shapes.shape_size):
