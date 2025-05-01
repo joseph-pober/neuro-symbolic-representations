@@ -242,7 +242,8 @@ def process_file_names(file_names) -> ndarray:
             processed_names.append(processed_name)
     return np.array(processed_names)
 
-def load_simple(directory, label_function=positive_label, img_to_array_function=img_to_array, n=None, flatten_data=True, shuffle=False):
+def load_simple(directory, label_function=positive_label, img_to_array_function=img_to_array, n=None,
+                flatten_data=True, shuffle=False):
     data, data_count1, file_names1 = load_imgs_from_directory(directory, n, img_to_array_function)
     
     p_names = process_file_names(file_names1)

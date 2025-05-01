@@ -653,3 +653,75 @@ class PAEb(PAEa):
 		# 	axs[index] = self.plot_encodings(enc,autoencoder)
 		# 	index +=1
 		plt.show()
+
+
+class PAEregularised(PAEb):
+	
+	def __init__(self, name, input_dim=32, property_dim=3, lr=0.01, reg_term=0.01):
+		self.name = name
+		self.input_dim = input_dim
+		self.input_shape = (input_dim,)
+		self.lr = lr
+		self.reg = reg_term
+		
+		# ENCODER
+		p1_dims = 1  # property_dim
+		p2_dims = 1  # property_dim
+		p3_dims = 1  # property_dim
+		self.encoder_input = Input(shape=self.input_shape, name="original_code")
+		# properties
+		p_activation = 'sigmoid'
+		code_activation = 'sigmoid'
+		p1 = Dense(self.input_dim // 2, activation=p_activation, name="p1_1")(self.encoder_input)
+		p1_code = Dense(p1_dims, activation=code_activation, name="p1_code",
+		                activity_regularizer=regularizers.l1(self.reg)
+		                )(p1)
+		p1 = Dense(self.input_dim // 2, activation=p_activation, name="p1_2")(p1_code)
+		p1_output = Dense(self.input_dim, activation=p_activation, name="p1_3")(p1)
+		# p1_output = Dense(code_dim, activation=p_activation, name="p1_4")(p1)
+		
+		# p2 = Dense(code_dim, activation=p_activation, name="p2_0")(self.encoder_input)
+		p2 = Dense(self.input_dim // 2, activation=p_activation, name="p2_1")(self.encoder_input)
+		p2_code = Dense(p2_dims, activation=p_activation, name="p2_code",
+		                activity_regularizer=regularizers.l1(self.reg))(p2)
+		p2 = Dense(self.input_dim // 2, activation=p_activation, name="p2_2")(p2_code)
+		p2_output = Dense(self.input_dim, activation=p_activation, name="p2_3")(p2)
+		# p2_output = Dense(code_dim, activation=p_activation, name="p2_4")(p2)
+		
+		p3 = Dense(self.input_dim // 2, activation=p_activation, name="p3_1")(self.encoder_input)
+		p3_code = Dense(p3_dims, activation=p_activation, name="p3_code",
+		                activity_regularizer=regularizers.l1(self.reg))(p3)
+		p3 = Dense(self.input_dim // 2, activation=p_activation, name="p3_2")(p3_code)
+		p3_output = Dense(self.input_dim, activation=p_activation, name="p3_3")(p3)
+		
+		ps = [p1_output, p2_output, p3_output]
+		codes = [p1_code, p2_code, p3_code]
+		self.encoder_output = concatenate(ps)
+		# encoder_m = Model(self.encoder_input,outputs=self.encoder_output, name="encoder_m")
+		self.encoder_model = Model(self.encoder_input, outputs=codes, name="Encoder")
+		
+		# CONCAT
+		# self.concat_input = Input(shape=(input_dim * 3,), name="concat_input")
+		# self.concat_output = Dense(self.input_dim, name="concat_output", activation=p_activation)(self.concat_input)
+		# self.concat_model = Model(self.concat_input, self.concat_output, name="Concat")
+		self.concat_output = Dense(self.input_dim, name="concat_output", activation=p_activation)(self.encoder_output)
+		
+		# PROPERTY DECODER
+		self.decoder_input = codes  # p1_code#Input(shape=(input_dim*3,), name="decoder_input")
+		self.decoder_output = self.concat_output
+		self.decoder_model = Model(self.decoder_input, self.decoder_output, name="Property_decoder")
+		
+		# AUTOENCODER
+		self.autoencoder_input = self.encoder_input  # Input(shape=self.input_shape, name="autoencoder_input")  # self.encoder_input#
+		# encoded_img = encoder_m(self.autoencoder_input)
+		# decoded_img = self.concat_model(encoded_img)
+		self.total_model = Model(self.autoencoder_input, self.concat_output, name="autoencoder")
+		
+		# AUTOENCODER OLD
+		# self.autoencoder_input = Input(shape=self.input_shape, name="autoencoder_input")  # self.encoder_input#
+		# encoded_img = encoder_m(self.autoencoder_input)
+		# decoded_img = self.concat_model(encoded_img)
+		# self.total_model = Model(self.autoencoder_input, decoded_img, name="autoencoder")
+		
+		# COMPILE
+		self.compile()

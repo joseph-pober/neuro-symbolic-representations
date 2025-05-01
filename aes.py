@@ -84,11 +84,11 @@ class Autoencoder:
         #COMPILE
         self.compile()
 
-    def fit(self, x_train, validation_split=0.1, epochs=100,graph=False):
+    def fit(self, x_train, validation_split=0.1, epochs=100,graph=False,shuffle=True):
         history = self.total_model.fit(x_train, x_train,
                                        epochs=epochs,
                                        batch_size=16,
-                                       shuffle=True,
+                                       shuffle=shuffle,
                                        validation_split=validation_split,
                                        verbose=2
                                        )
@@ -243,6 +243,50 @@ class Autoencoder:
             ax.get_yaxis().set_visible(False)
         plt.show()
         
+
+class AutoencoderRegularised(Autoencoder):
+    
+    def __init__(self, name=Autoencoder.default_name, input_dim=784, encoding_dim=32, lr=0.01, reg_mode=regularizers.l1, reg_term = 10e-5):
+        self.name = name
+        self.input_dim = input_dim
+        self.encoding_dim = encoding_dim
+        self.input_shape = (input_dim,)
+        self.encoding_shape = (self.encoding_dim,)
+        self.lr = lr
+        self.reg_mode=reg_mode
+        self.reg=reg_term
+        
+        self.encoder_activation = "sigmoid"
+        self.code_activation = "sigmoid"
+        self.decoder_activation = "sigmoid"
+        self.decoder_output_activation = "sigmoid"
+        
+        # ENCODER
+        self.encoder_input = Input(shape=self.input_shape, name="original_img")
+        # h = Dense(256, activation='sigmoid')(self.encoder_input)
+        h = Dense(128, activation=self.encoder_activation)(self.encoder_input)
+        h = Dense(64, activation=self.encoder_activation)(h)
+        self.encoder_output = Dense(encoding_dim, activation=self.code_activation, name="code",
+                                    activity_regularizer=self.reg_mode(self.reg)
+                                    )(h)
+        self.encoder_model = Model(self.encoder_input, self.encoder_output, name="Encoder")
+        
+        # DECODER
+        self.decoder_input = Input(shape=self.encoding_shape, name="decoder_input")
+        h = Dense(64, activation=self.decoder_activation)(self.decoder_input)
+        h = Dense(128, activation=self.decoder_activation)(h)
+        # h = Dense(256, activation='sigmoid')(h)
+        self.concat_output = Dense(self.input_dim, activation=self.decoder_output_activation)(h)
+        self.decoder_model = Model(self.decoder_input, self.concat_output, name="Decoder")
+        
+        # AUTOENCODER
+        self.autoencoder_input = Input(shape=self.input_shape, name="autoencoder_input")  # self.encoder_input#
+        encoded_img = self.encoder_model(self.autoencoder_input)
+        decoded_img = self.decoder_model(encoded_img)
+        self.total_model = Model(self.autoencoder_input, decoded_img, name=self.name)
+        
+        # COMPILE
+        self.compile()
 
 class AutoencoderSmall(Autoencoder):
     default_name = "autoencoder_small"
