@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 import data
 from vis import heatmap
 
-# log_dir=os.path.join("C:/Diverses/Uni/PhD/subsym/data", 'tensorboard')
 log_dir = os.path.join('.\logs', 'tensorboard')
 tensorboard = TensorBoard(
     log_dir=log_dir, histogram_freq=0, write_graph=True,
@@ -26,23 +25,6 @@ keras_callbacks = [
 ]
 
 use_bias = False
-
-
-# class Linear(keras.layers.Layer):
-#     def __init__(self, id, units=32, input_dim=32):
-#         super(Linear, self).__init__()
-#         w_init = tf.random_normal_initializer()
-#         self.w = tf.Variable(
-#             initial_value=w_init(shape=(input_dim, units), dtype="float32"),
-#             trainable=True,
-#         )
-#         b_init = tf.zeros_initializer()
-#         self.b = tf.Variable(
-#             initial_value=b_init(shape=(units,), dtype="float32"), trainable=True
-#         )
-#
-#     def call(self, inputs):
-#         return tf.matmul(inputs, self.w) + self.b
 
 
 class DefaultComparer:
