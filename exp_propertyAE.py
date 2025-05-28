@@ -6,9 +6,11 @@ from keras import Input, Model, regularizers
 from keras.layers import Dense, Concatenate, concatenate
 from keras.optimizers import SGD, Adam
 from matplotlib import pyplot as plt, cm
+from matplotlib.pyplot import title
+
 import directories as DIR
 from matplotlib.colors import Normalize
-
+import mpl_toolkits
 from aes import Autoencoder
 
 
@@ -100,20 +102,14 @@ class PAEa(Autoencoder):
 		code_activation = 'sigmoid'
 		# p1 = Dense(code_dim, activation=p_activation, name="p1_0")(self.encoder_input)
 		p1 = Dense(self.input_dim//2, activation=p_activation, name="p1_1")(self.encoder_input)
-		p1_code = Dense(p1_dims, activation=code_activation, name="p1_code",
-		                # activity_regularizer=regularizers.l1(0.001)
-		                )(p1)
+		p1_code = Dense(p1_dims, activation=code_activation, name="p1_code")(p1)
 		p1 = Dense(self.input_dim//2, activation=p_activation, name="p1_2")(p1_code)
 		p1_output = Dense(self.input_dim, activation=p_activation, name="p1_3")(p1)
-		# p1_output = Dense(code_dim, activation=p_activation, name="p1_4")(p1)
 		
-		# p2 = Dense(code_dim, activation=p_activation, name="p2_0")(self.encoder_input)
 		p2 = Dense(self.input_dim//2, activation=p_activation, name="p2_1")(self.encoder_input)
 		p2_code = Dense(p2_dims, activation=p_activation, name="p2_code")(p2)
 		p2 = Dense(self.input_dim//2, activation=p_activation, name="p2_2")(p2_code)
 		p2_output = Dense(self.input_dim, activation=p_activation, name="p2_3")(p2)
-		# p2_output = Dense(code_dim, activation=p_activation, name="p2_4")(p2)
-		
 
 		p3 = Dense(self.input_dim//2, activation=p_activation, name="p3_1")(self.encoder_input)
 		p3_code = Dense(p3_dims, activation=p_activation, name="p3_code")(p3)
@@ -194,16 +190,141 @@ class PAEa(Autoencoder):
 			ax.get_yaxis().set_visible(False)
 		plt.show()
 	
+	def vis_nice_images_load(self, imgs, encodings):
+		n = len(encodings)  # shape[0]
+		n = int(round(n**(1/3),ndigits=0))
+		title_n = 2
+		x_n=0
+		y_n=1
+		for kindex in range(n):
+			fig, axs = plt.subplots(nrows=n, ncols=n)
+			fig.set_figwidth(8)
+			fig.set_figheight(8)
+			plt.subplots_adjust(left=0.2, wspace=0.07, hspace=0.07)
+			title_index = kindex*(n**2)
+			fig.suptitle(f"N{title_n+1}={np.round(encodings[title_index][title_n], 2)}", fontsize=9)
+			plt.gray()
+			
+			for index in range(n):
+				for jindex in range(n):
+					# i = (index*(n**2))+(jindex * n) + kindex # Inverted index, sometimes results in better readable image configurations
+					# i = (index * (n ** 2)) + (jindex * n) + kindex  # Other Inverted index
+					i = (kindex*(n**2))+(index * n) + jindex # Regular index
+					ax_index = (index * n) + jindex
+					ax = axs.flat[ax_index]
+					ax.imshow(imgs[i].reshape(28, 28))
+					
+					ax.get_xaxis().set_visible(False)
+					ax.get_yaxis().set_visible(False)
+					if index == 0:
+						ax.set_title(
+							f"N{x_n+1}={np.round(encodings[i][x_n], 2)}",
+							fontsize=9)
+					if jindex == 0:
+						ax.set_ylabel(f"N{y_n+1}={np.round(encodings[i][y_n], 2)}",
+						              fontsize=9, rotation=45, labelpad=20)
+						ax.get_yaxis().set_visible(True)
+						ax.tick_params(
+							axis='y',  # changes apply to the x-axis
+							which='both',  # both major and minor ticks are affected
+							bottom=False,  # ticks along the bottom edge are off
+							top=False,  # ticks along the top edge are off
+							left=False,
+							right=False,
+							labelleft=False,
+							labelbottom=False)  # labels along the bottom edge are off
+			# fig.align_labels()
+			fig.tight_layout()
+			plt.show()
+	
+	def vis_nice_images(self,encodings, autoencoder):
+		n = len(encodings)  # shape[0]
+		
+		imgs = []
+		for i in range(n):
+			decodings = self.decode(encodings[i])
+			img = autoencoder.decode(decodings)
+			imgs.append(img)
+		
+		n = int(math.sqrt(n))
+		fig, axs = plt.subplots(nrows=n, ncols=n)
+		fig.set_figwidth(8)
+		fig.set_figheight(8)
+		plt.subplots_adjust(left=0.2,wspace=0.07,hspace=0.07)
+		fig.suptitle(f"N_1={np.round(encodings[0][0][0], 2)}",fontsize=10)
+		plt.gray()
+		
+		for index in range(n):
+			for jindex in range(n):
+				i = (index * n) + jindex
+				ax = axs.flat[i]
+				ax.imshow(imgs[i].reshape(28, 28))
+
+				ax.get_xaxis().set_visible(False)
+				ax.get_yaxis().set_visible(False)
+				if index==0:
+					ax.set_title(
+						f"N_3={np.round(encodings[i][2][0], 2)}",#, {np.round(encodings[i][1][0], 2)}, {np.round(encodings[i][2][0], 2)})",
+						fontsize=10)
+				if jindex==0:
+					# mpl_toolkits. axes_grid1.axes_divider.make_axes_area_auto_adjustable(ax)
+					ax.set_ylabel(f"N_2={np.round(encodings[i][1][0], 2)}",#, {np.round(encodings[i][1][0], 2)}, {np.round(encodings[i][2][0], 2)})",
+						fontsize=10,
+						          # rotation=45,
+						          labelpad=40)
+					ax.get_yaxis().set_visible(True)
+					ax.tick_params(
+						axis='y',  # changes apply to the x-axis
+						which='both',  # both major and minor ticks are affected
+						bottom=False,  # ticks along the bottom edge are off
+						top=False,  # ticks along the top edge are off
+						left=False,
+						right=False,
+						labelleft=False,
+						labelbottom=False)  # labels along the bottom edge are off
+					# ax.ylabel('X-Axis Label')
+				# ax.set_title(
+				# f"({np.round(encodings[i][0][0], 2)}, {np.round(encodings[i][1][0], 2)}, {np.round(encodings[i][2][0], 2)})",
+				# 		fontsize=8)
+		# fig.tight_layout()
+		# fig.align_labels()
+		plt.show()
+		
+		# double_mode = False
+		# if n > 10:
+		# 	n = int(math.sqrt(n))
+		# 	double_mode = True
+		#
+		# if double_mode:
+		# 	index = 0
+		# 	# fig, axs = plt.subplots(n, n)
+		# 	for i in range(n):
+		# 		for j in range(n):
+		#
+		# 			img = imgs[index].reshape(28, 28)
+		#
+		# 			ax = plt.subplot(n, n, index + 1)
+		# 			plt.imshow(img)
+		# 			plt.gray()
+		# 			ax.set_title(
+		# 				f"{np.round(encodings[index][0], 2)},{np.round(encodings[index][1], 2)},{np.round(encodings[index][2], 2)}",
+		# 				fontsize=8)
+		# 			ax.get_xaxis().set_visible(False)
+		# 			ax.get_yaxis().set_visible(False)
+		#
+		# if not double_mode:
+		
 	def vis_encodings(self, encodings, autoencoder):
 		n = len(encodings)  # shape[0]
-		# imgs = []
-		# for i in range(n):
-		# 	decodings = self.decode(encodings[i])
-		# 	img = autoencoder.decode(decodings)
-		# 	imgs.append(img)
 		
-		decodings = self.decode(encodings)
-		imgs = autoencoder.decode(decodings)
+		imgs = []
+		for i in range(n):
+			decodings = self.decode(encodings[i])
+			img = autoencoder.decode(decodings)
+			imgs.append(img)
+		
+		# decodings = self.decode(encodings)
+		# imgs = autoencoder.decode(decodings)
 		
 		n = int(math.sqrt(n))
 

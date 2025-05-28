@@ -7,6 +7,9 @@ histories_dir = dir + "histories/"
 
 model_dir = dir + "models/"
 
+exp_property_visualisation = data_dir+"property_visualisation/"
+
+backup_dir = data_dir + "backup/"
 shapes_complex_dir = data_dir + "complex/"
 shapes_simple_dir = data_dir + "simple/"
 shapes_left_dir = data_dir + "left/"
@@ -29,5 +32,5 @@ shapes_interpolated_custom= shapes_interpolated + "custom/"
 shapes_interpolated_custom_mixed= shapes_interpolated + "custom_mixed/"
 square_and_circle_interpolated_custom_mixed= shapes_interpolated + "custom_square_and_circle/"
 square_and_triangle_interpolated = shapes_interpolated + "square_triangle/"
-shapes_interpolated_custom_mixed_old= shapes_interpolated + "custom_mixed_OLD/"
+shapes_interpolated_custom_mixed_old= backup_dir +"custom_mixed_OLD/"
 negative_dir = data_dir + "negative/"
