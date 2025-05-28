@@ -57,3 +57,5 @@ This repository contains all the source code and data generated for the PhD thes
 
 Run `main.py` to set up and execute experiments. Data generation is managed by `data_main.py`.
 
+## License
+"Towards Neuro-Symbolic Symbol Grounding" and associated GitHub Repository © 2025 by Joseph Pober is licensed under CC BY-SA 4.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/4.0/ 
