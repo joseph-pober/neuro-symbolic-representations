@@ -2,6 +2,7 @@ dir = "C:/Users/error/PycharmProjects/ml/"
 dir = "A:/PhD/ml/"
 
 data_dir = "A:/PhD/ml/data/"#"C:/Users/error/PycharmProjects/ml/data/"
+experiment_data_dir = data_dir + "experiments/"
 
 histories_dir = dir + "histories/"
 

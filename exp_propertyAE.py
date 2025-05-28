@@ -776,6 +776,71 @@ class PAEb(PAEa):
 		plt.show()
 
 
+class PAEintegrated(PAEa):
+	
+	def __init__(self, name, img_dim =784, features_dim=32, lr=0.01):
+		self.name = name
+		self.lr = lr
+		
+		self.encoder_activation = "sigmoid"
+		self.code_activation = "sigmoid"
+		self.decoder_activation = "sigmoid"
+		self.decoder_output_activation = "sigmoid"
+		
+		# ENCODER
+		self.encoder_input = Input(shape=(img_dim,), name="original_img")
+		h = Dense(128, activation=self.encoder_activation)(self.encoder_input)
+		h = Dense(64, activation=self.encoder_activation)(h)
+		self.features = Dense(features_dim, activation=self.code_activation, name="features")(h)
+		
+		p1_dims = 1  # property_dim
+		p2_dims = 1  # property_dim
+		p3_dims = 1  # property_dim
+		# self.encoder_input = Input(shape=self.input_shape, name="original_code")
+		# properties
+		p_activation = 'sigmoid'
+		code_activation = 'sigmoid'
+		p1 = Dense(features_dim // 2, activation=p_activation, name="p1_1")(self.features)
+		p1_code = Dense(p1_dims, activation=code_activation, name="p1_code",)(p1)
+		p1 = Dense(features_dim // 2, activation=p_activation, name="p1_2")(p1_code)
+		p1_output = Dense(features_dim, activation=p_activation, name="p1_3")(p1)
+		
+		p2 = Dense(features_dim // 2, activation=p_activation, name="p2_1")(self.features)
+		p2_code = Dense(p2_dims, activation=p_activation, name="p2_code")(p2)
+		p2 = Dense(features_dim // 2, activation=p_activation, name="p2_2")(p2_code)
+		p2_output = Dense(features_dim, activation=p_activation, name="p2_3")(p2)
+		
+		p3 = Dense(features_dim // 2, activation=p_activation, name="p3_1")(self.features)
+		p3_code = Dense(p3_dims, activation=p_activation, name="p3_code")(p3)
+		p3 = Dense(features_dim // 2, activation=p_activation, name="p3_2")(p3_code)
+		p3_output = Dense(features_dim, activation=p_activation, name="p3_3")(p3)
+		
+		ps = [p1_output, p2_output, p3_output]
+		codes = [p1_code, p2_code, p3_code]
+		self.encoder_output = concatenate(ps)
+		# encoder_m = Model(self.encoder_input, outputs=self.encoder_output, name="encoder_m")
+		self.encoder_model = Model(self.encoder_input, outputs=codes, name="Encoder")
+		
+		# DECODER
+		self.concat_input = Input(shape=(features_dim * 3,), name="decoder_input")
+		self.concat_output = Dense(features_dim, name="concat_output", activation=p_activation)(self.concat_input)
+		# self.concat_model = Model(self.concat_input, self.concat_output, name="Decoder")
+		
+		h = Dense(64, activation=self.decoder_activation)(self.concat_output)
+		h = Dense(128, activation=self.decoder_activation)(h)
+		self.img_output = Dense(img_dim, activation=self.decoder_output_activation)(h)
+		self.decoder_model = Model(self.concat_input, self.img_output, name="Decoder")
+		
+		# AUTOENCODER
+		self.autoencoder_input = Input(shape=(img_dim,), name="autoencoder_input")  # self.encoder_input#
+		# encoded_img = self.encoder_model(self.autoencoder_input)
+		encoded_img = encoder_m(self.autoencoder_input)
+		decoded_img = self.decoder_model(encoded_img)
+		self.total_model = Model(self.autoencoder_input, decoded_img, name="autoencoder")
+		
+		# COMPILE
+		self.compile()
+
 class PAEregularised(PAEb):
 	
 	def __init__(self, name, input_dim=32, property_dim=3, lr=0.01, reg_term=0.01):

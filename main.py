@@ -83,24 +83,26 @@ exp_2shapes_data, _, _, _  = data.load_simple(DIR.square_and_triangle_interpolat
 # experiment_name = "property_visualisation3" # currently testing ground
 # experiment_name = "property_visualisation2" # this one has a different learning rate for PAE, currently either 0.005 or 0.001
 # experiment_name = "property_visualisation"
-experiment_name = "2shapes"
+# experiment_name = "2shapes"
+experiment_name = "integrated"
 
 class RunMode(Enum):
     TRAIN = 1
     LOAD = 2
     NOTHING = 3
 # overall_run_mode:RunMode=RunMode.TRAIN
-overall_run_mode:RunMode=RunMode.LOAD
-# overall_run_mode:RunMode=RunMode.NOTHING
+# overall_run_mode:RunMode=RunMode.LOAD
+overall_run_mode:RunMode=RunMode.NOTHING
 if overall_run_mode == RunMode.NOTHING:
     # ae_run_mode : RunMode = RunMode.TRAIN
-    ae_run_mode : RunMode = RunMode.LOAD
+    # ae_run_mode : RunMode = RunMode.LOAD
+    ae_run_mode : RunMode=RunMode.NOTHING
 
-    # pae_run_mode : RunMode = RunMode.TRAIN
-    pae_run_mode : RunMode = RunMode.LOAD
-    #
-    # data_run_mode = RunMode.TRAIN
-    data_run_mode = RunMode.LOAD
+    pae_run_mode : RunMode = RunMode.TRAIN
+    # pae_run_mode : RunMode = RunMode.LOAD
+
+    data_run_mode = RunMode.TRAIN
+    # data_run_mode = RunMode.LOAD
 else:
     ae_run_mode: RunMode = overall_run_mode
     pae_run_mode: RunMode = overall_run_mode
@@ -123,14 +125,14 @@ ae_reg_term=10e-5
 ae_validation_split = 0.1
 
 # property autoencoder
-pae_epochs=150
+pae_epochs=100
 pae_property_dim=3
 pae_input_dim=32
 pae_lr = 0.005#0.005 #0.01
 pae_validation_split = 0.1
 
 # data
-parameter_exploration_steps = 8
+parameter_exploration_steps = 2
 parameter_exploration_step_size = parameter_exploration_steps - 1
 ###################
 
@@ -144,8 +146,10 @@ ae = aes.Autoencoder(name=ae_full_name,  input_dim=ae_input_dim, encoding_dim=ae
 pae_name = f"PAE.{experiment_name}_{pae_input_dim}-{pae_property_dim}-{pae_epochs}"
 # pae : exp_propertyAE.PAEa = exp_propertyAE.PAEa(
 #     name=pae_name, input_dim=pae_input_dim, property_dim=pae_property_dim, lr=pae_lr)
-pae : exp_propertyAE.PAEb = exp_propertyAE.PAEb(
-    name=pae_name, input_dim=pae_input_dim, property_dim=pae_property_dim, lr=pae_lr)
+# pae : exp_propertyAE.PAEb = exp_propertyAE.PAEb(
+#     name=pae_name, input_dim=pae_input_dim, property_dim=pae_property_dim, lr=pae_lr)
+pae : exp_propertyAE.PAEintegrated = exp_propertyAE.PAEintegrated(
+    name=pae_name, features_dim=32,img_dim=784, lr=pae_lr)
 ########
 
 
@@ -172,12 +176,15 @@ if ae_run_mode == RunMode.TRAIN:
 # load
 elif ae_run_mode == RunMode.LOAD:
     ae.load()
+elif ae_run_mode == RunMode.NOTHING:
+    pass
     
-
 # Create feature vectors
-encode_data = ae_data #exp_c_data # usually x (the full data)
-z = ae.encode(encode_data)
-
+if ae_run_mode != RunMode.NOTHING:
+    encode_data = ae_data #exp_c_data # usually x (the full data)
+    z = ae.encode(encode_data)
+else:
+    z = ae_data
 # PROPERTY NETWORK
 # pae_reg_term = 10e-5
 # version="3shapesB"
@@ -213,7 +220,7 @@ if data_run_mode == RunMode.TRAIN:
                 index = (k * parameter_exploration_steps ** 2) + (i * parameter_exploration_steps) + j
                 encoding = [(1 / parameter_exploration_step_size) * j, (1 / parameter_exploration_step_size) * i, (1 / parameter_exploration_step_size) * k]
                 # encodings.append(encoding)
-                np.savetxt(f"{DIR.data_dir}{experiment_name}/encodings/{index}.txt",encoding)
+                np.savetxt(f"{DIR.experiment_data_dir}{experiment_name}/encodings/{index}.txt",encoding)
                 all_encodings.append(encoding)
         
     decodings=[]
@@ -233,8 +240,8 @@ if data_run_mode == RunMode.TRAIN:
                 decodings.append(decoding)
                 img = ae.decode(decoding)
                 imgs.append(img)
-                np.savetxt(f"{DIR.data_dir}{experiment_name}/decodings/{index}.txt",decoding)
-                np.savetxt(f"{DIR.data_dir}{experiment_name}/imgs/{index}.txt",img)
+                np.savetxt(f"{DIR.experiment_data_dir}{experiment_name}/decodings/{index}.txt",decoding)
+                np.savetxt(f"{DIR.experiment_data_dir}{experiment_name}/imgs/{index}.txt",img)
 
 # if data_mode == RunMode.LOAD:
 total_encodings = []
@@ -245,8 +252,8 @@ for k in range(parameter_exploration_steps):
     for i in range(parameter_exploration_steps): # n x n images loaded
         for j in range(parameter_exploration_steps):
             index= (k * (parameter_exploration_steps ** 2)) + (i * parameter_exploration_steps) + j
-            total_imgs.append(np.loadtxt(f"{DIR.data_dir}{experiment_name}/imgs/{index}.txt"))
-            total_encodings.append(np.loadtxt(f"{DIR.data_dir}{experiment_name}/encodings/{index}.txt"))
+            total_imgs.append(np.loadtxt(f"{DIR.experiment_data_dir}{experiment_name}/imgs/{index}.txt"))
+            total_encodings.append(np.loadtxt(f"{DIR.experiment_data_dir}{experiment_name}/encodings/{index}.txt"))
     # total_encodings.append(encodings)
     # total_imgs.append(imgs)
 pae.vis_nice_images_load(imgs=total_imgs,encodings=total_encodings)
