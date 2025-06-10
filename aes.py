@@ -1,9 +1,7 @@
 import keras
 import numpy as np
-import math
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
+from keras.layers import Input, Dense
 from keras.models import Model
-from keras import backend as K
 from keras import regularizers
 import matplotlib.pyplot as plt
 from keras.optimizers import Adam

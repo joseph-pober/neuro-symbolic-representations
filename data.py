@@ -1,14 +1,10 @@
 import os
-from typing import List
 
 from keras.datasets import mnist
 import numpy as np
-# load and show an image with Pillow
 from PIL import Image
 from numpy import ndarray
 
-import generator
-# from generator import shapes
 from shapes import total_img_size, ShapeEnum
 import directories as DIR
 
@@ -55,7 +51,7 @@ def split_data_label(data):
     return x, y
 
 
-def load_mnist():
+def load_mnist(n=500):
     (input_train, target_train), (input_test, target_test) = mnist.load_data()
     img_width, img_height = input_train.shape[1], input_train.shape[2]
     # Reshape data
@@ -68,7 +64,13 @@ def load_mnist():
     # Normalize data
     input_train = input_train / 255
     input_test = input_test / 255
-    return input_train, target_train
+    m_input_train = []
+    m_target_train = []
+    for i in range(len(input_train)):
+        if target_train[i] < 2:
+            m_input_train.append(input_train[i])
+            m_target_train.append(target_train[i])
+    return m_input_train[:n], m_target_train[:n]
 
 
 def sample_data(data, labels, target_labels, per_label):

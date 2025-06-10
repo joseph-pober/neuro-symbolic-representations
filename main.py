@@ -24,6 +24,7 @@ import data
 # Just disables the warning, doesn't take advantage of AVX/FMA to run faster
 import os
 
+from data import load_mnist
 from split_nn import SplitNN
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -84,15 +85,16 @@ exp_2shapes_data, _, _, _  = data.load_simple(DIR.square_and_triangle_interpolat
 # experiment_name = "property_visualisation2" # this one has a different learning rate for PAE, currently either 0.005 or 0.001
 # experiment_name = "property_visualisation"
 # experiment_name = "2shapes"
-experiment_name = "integrated"
+# experiment_name = "integrated"
+experiment_name = "mnist"
 
 class RunMode(Enum):
     TRAIN = 1
     LOAD = 2
     NOTHING = 3
-# overall_run_mode:RunMode=RunMode.TRAIN
+overall_run_mode:RunMode=RunMode.TRAIN
 # overall_run_mode:RunMode=RunMode.LOAD
-overall_run_mode:RunMode=RunMode.NOTHING
+# overall_run_mode:RunMode=RunMode.NOTHING
 if overall_run_mode == RunMode.NOTHING:
     # ae_run_mode : RunMode = RunMode.TRAIN
     # ae_run_mode : RunMode = RunMode.LOAD
@@ -108,10 +110,9 @@ else:
     pae_run_mode: RunMode = overall_run_mode
     data_run_mode = overall_run_mode
 
-ae_graph = False
-pae_graph = False
-
-ae_vis = False
+ae_graph = True
+pae_graph = True
+ae_vis = True
 ###################
 
 
@@ -144,12 +145,12 @@ ae = aes.Autoencoder(name=ae_full_name,  input_dim=ae_input_dim, encoding_dim=ae
 
 # property autoencoder
 pae_name = f"PAE.{experiment_name}_{pae_input_dim}-{pae_property_dim}-{pae_epochs}"
-# pae : exp_propertyAE.PAEa = exp_propertyAE.PAEa(
-#     name=pae_name, input_dim=pae_input_dim, property_dim=pae_property_dim, lr=pae_lr)
+pae : exp_propertyAE.PAEa = exp_propertyAE.PAEa(
+    name=pae_name, input_dim=pae_input_dim, property_dim=pae_property_dim, lr=pae_lr)
 # pae : exp_propertyAE.PAEb = exp_propertyAE.PAEb(
 #     name=pae_name, input_dim=pae_input_dim, property_dim=pae_property_dim, lr=pae_lr)
-pae : exp_propertyAE.PAEintegrated = exp_propertyAE.PAEintegrated(
-    name=pae_name, features_dim=32,img_dim=784, lr=pae_lr)
+# pae : exp_propertyAE.PAEintegrated = exp_propertyAE.PAEintegrated(
+#     name=pae_name, features_dim=32,img_dim=784, lr=pae_lr)
 ########
 
 
@@ -164,7 +165,8 @@ pae : exp_propertyAE.PAEintegrated = exp_propertyAE.PAEintegrated(
 #                                 reg_mode=ae_reg_mode,reg_term=ae_reg_term)
 
 # RUN
-ae_data = x#exp_2shapes_data #
+ae_data, y = load_mnist()#x#exp_2shapes_data #
+
 # train
 if ae_run_mode == RunMode.TRAIN:
     ae.fit(ae_data,epochs=ae_epochs,graph=ae_graph,validation_split=ae_validation_split)

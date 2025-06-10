@@ -1,12 +1,9 @@
-dir = "C:/Users/error/PycharmProjects/ml/"
-dir = "A:/PhD/ml/"
-
-data_dir = "A:/PhD/ml/data/"#"C:/Users/error/PycharmProjects/ml/data/"
+data_dir = "data/"
 experiment_data_dir = data_dir + "experiments/"
 
-histories_dir = dir + "histories/"
+histories_dir = "histories/"
 
-model_dir = dir + "models/"
+model_dir = "models/"
 
 exp_property_visualisation = data_dir+"property_visualisation/"
 
