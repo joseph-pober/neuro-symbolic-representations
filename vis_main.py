@@ -1,4 +1,4 @@
-import numpy as np
+
 from matplotlib import pyplot as plt
 import vis
 
@@ -8,27 +8,6 @@ plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
 
-# data = np.load(DIR.histories_dir+"pae_code32.npy",allow_pickle=True)
-# data_shape = np.shape(data[0].history['loss'])
-# data_length = len(data)
-#
-# avg = {"loss":np.zeros(data_shape), "val_loss":np.zeros(data_shape)}
-# # avg = np.average(data)
-#
-#
-# for d in data:
-# 	l = np.array(d.history['loss'])
-# 	v_l = np.array(d.history['val_loss'])
-# 	plt.plot(l,alpha=0.3)
-# 	plt.plot(v_l,alpha=0.3)
-# 	avg['loss'] += l/data_length
-# 	avg['val_loss'] += v_l/data_length
-# plt.plot(avg['loss'])
-# plt.plot(avg['val_loss'])
-# plt.title('model loss')
-# plt.ylabel('loss')
-# plt.xlabel('epoch')
-# plt.show()
 
 alpha = 0.2
 dirs = [

@@ -58,14 +58,6 @@ def plot():
     history2 = np.load('histories/nn_10_32_history.npy', allow_pickle='TRUE').item()
 
     # # summarize history for accuracy
-    # plt.plot(history.history['accuracy'])
-    # plt.plot(history.history['val_accuracy'])
-    # plt.title('model accuracy')
-    # plt.ylabel('accuracy')
-    # plt.xlabel('epoch')
-    # plt.legend(['train', 'test'], loc='upper left')
-    # plt.show()
-    # summarize history for loss
     plt.plot(history1['loss'])
     plt.plot(history1['val_loss'])
     plt.plot(history2['loss'])

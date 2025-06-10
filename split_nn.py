@@ -1,8 +1,7 @@
-import pickle
+
 
 import keras
 import numpy as np
-import pandas as pd
 from keras import Input, Model
 from keras.layers import Dense, concatenate, Conv2D, MaxPooling2D, Flatten
 import tensorflow as tf
@@ -57,15 +56,6 @@ class SplitNN:
 
     def save_history(self):
         np.save(self.name+'_history.npy', self.fit_history.history)
-        # convert the history.history dict to a pandas DataFrame:
-        # hist_df = pd.DataFrame(self.fit_history.history)
-        # # save to json:
-        # hist_json_file = 'history.json'
-        # with open(hist_json_file, mode='w') as f:
-        #     hist_df.to_json(f)
-
-        # with open('/trainHistoryDict', 'wb') as file_pi:
-        #     pickle.dump(self.fit_historyhistory.history, file_pi)
 
     def compile(self):
         self.total_model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])

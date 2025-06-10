@@ -4,7 +4,6 @@ import shapes
 from shapes import ShapeEnum, generate_img, generate_img_pair
 import numpy as np
 
-# colors = ["red", "blue"]
 default_colors = ["white"]
 default_shapes = ['c']  # ['r', 'c']
 default_directions = ['l', 'r', 'u', 'd']

@@ -6,11 +6,8 @@ from keras import Input, Model, regularizers
 from keras.layers import Dense, Concatenate, concatenate
 from keras.optimizers import SGD, Adam
 from matplotlib import pyplot as plt, cm
-from matplotlib.pyplot import title
 
 import directories as DIR
-from matplotlib.colors import Normalize
-import mpl_toolkits
 from aes import Autoencoder
 
 
@@ -818,8 +815,8 @@ class PAEintegrated(PAEa):
 		ps = [p1_output, p2_output, p3_output]
 		codes = [p1_code, p2_code, p3_code]
 		self.encoder_output = concatenate(ps)
-		# encoder_m = Model(self.encoder_input, outputs=self.encoder_output, name="encoder_m")
-		self.encoder_model = Model(self.encoder_input, outputs=codes, name="Encoder")
+		encoder_m = Model(self.encoder_input, outputs=self.encoder_output, name="encoder_m")
+		# self.encoder_model = Model(self.encoder_input, outputs=codes, name="Encoder")
 		
 		# DECODER
 		self.concat_input = Input(shape=(features_dim * 3,), name="decoder_input")
