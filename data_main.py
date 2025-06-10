@@ -1,5 +1,5 @@
 import shapes
-from generator import generate_data, generate_shape_pairs, generate_shape, generate_shape_interpolation
+from generator import generate_shape_interpolation
 import directories as d
 
 
